@@ -4,13 +4,22 @@
 FROM node:22-slim AS build
 WORKDIR /app
 
-# Install system dependencies required by @llamaindex/liteparse
+# Install system dependencies required by @llamaindex/liteparse.
+# ghostscript is the back-end for ImageMagick's PDF coder; liteparse
+# routes image OCR through a PDF conversion step (see smoke-test
+# failure history). The PDF policy restriction in /etc/ImageMagick-6/
+# policy.xml is relaxed below to allow this. Security note: this
+# re-enables the Ghostscript RCE surface for *uploaded PDFs being
+# rasterized through ImageMagick*. Bounded by API-key auth + 30MB
+# cap; acceptable for this internal tool.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips42 \
     ca-certificates \
     libreoffice \
     imagemagick \
-    && rm -rf /var/lib/apt/lists/*
+    ghostscript \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i 's|<policy domain="coder" rights="none" pattern="PDF" />|<policy domain="coder" rights="read\|write" pattern="PDF" />|' /etc/ImageMagick-6/policy.xml
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
 RUN corepack enable && pnpm install --frozen-lockfile
@@ -29,7 +38,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     libreoffice \
     imagemagick \
-    && rm -rf /var/lib/apt/lists/*
+    ghostscript \
+    && rm -rf /var/lib/apt/lists/* \
+    && sed -i 's|<policy domain="coder" rights="none" pattern="PDF" />|<policy domain="coder" rights="read\|write" pattern="PDF" />|' /etc/ImageMagick-6/policy.xml
 
 ENV NODE_ENV=production
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
