@@ -6,7 +6,7 @@ export default defineConfig({
     ssr: true,
     outDir: "dist",
     emptyOutDir: true,
-    minify: true,
+    minify: false,
     rollupOptions: {
       input: "src/index.ts",
       output: {

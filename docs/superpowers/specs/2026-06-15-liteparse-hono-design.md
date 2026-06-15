@@ -65,7 +65,7 @@ liteparse-hono/
 ├── package.json                     # private: true, scripts, deps
 ├── pnpm-lock.yaml
 ├── tsconfig.json                    # editor config only; noEmit
-├── vite.config.ts                   # @hono/vite-build/node plugin
+├── vite.config.ts                   # plain Vite SSR build with src/index.ts as entry
 ├── README.md
 ├── API_SPEC.md                      # one-section API doc
 ├── data/                            # test fixtures
@@ -206,7 +206,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
 import { configure, getConsoleSink, getLogger } from "@logtape/logtape";
 
 const level = (process.env.LOG_LEVEL ?? "info") as
-  | "debug" | "info" | "warn" | "error" | "fatal";
+  | "debug" | "info" | "warning" | "error" | "fatal";
 
 let configured = false;
 export async function configureLogger() {
@@ -293,12 +293,28 @@ serve({ fetch: createApp().fetch, port }, (info) => {
 
 ```ts
 import { defineConfig } from "vite";
-import build from "@hono/vite-build/node";
 
 export default defineConfig({
-  plugins: [build({ entry: "./src/index.ts" })],
+  build: {
+    target: "node22",
+    ssr: true,
+    outDir: "dist",
+    emptyOutDir: true,
+    minify: true,
+    rollupOptions: {
+      input: "src/index.ts",
+      output: {
+        entryFileNames: "index.js",
+        format: "esm",
+      },
+    },
+  },
 });
 ```
+
+We use plain Vite SSR build with `src/index.ts` as the entry. Output is `dist/index.js` (a single ESM bundle), started by `node dist/index.js` in the Dockerfile runtime stage. This gives us full control over the entry: `src/index.ts` calls `serve({ ..., port: Number(process.env.PORT) ?? 5707 })` at top level with a runtime `PORT` env var, and calls `configureLogger()` first.
+
+We deliberately do **not** use `@hono/vite-build/node`: that plugin auto-injects `serve()` and bakes the port at build time, and requires `src/index.ts` to default-export a Hono app (it then registers `.fetch` on its own internal app). That model is incompatible with our runtime `PORT` requirement and with calling `configureLogger()` before `serve()` at top level.
 
 ### `Dockerfile` — multi-stage
 
@@ -362,13 +378,13 @@ Six vitest cases in `__tests__/parse.test.ts`, calling `parse()` directly with `
 |-----|----------|---------|-------------|
 | `PORT` | no | `5707` | HTTP port the server binds. |
 | `LITEPARSE_API_KEY` | no | unset | If set, all routes (except `/health`) require `Authorization: Bearer <key>`. If unset, auth is disabled and a warning is logged. |
-| `LOG_LEVEL` | no | `info` | One of `debug`, `info`, `warn`, `error`, `fatal`. |
+| `LOG_LEVEL` | no | `info` | One of `debug`, `info`, `warning`, `error`, `fatal`. |
 
 ## Open questions for the implementation plan
 
 These do not block the spec; the plan will resolve them.
 
-- Exact version pins for new dependencies: `@hono/node-server`, `@hono/vite-build`, `@logtape/logtape`, `vite-node`, plus confirming the existing `hono`, `vite`, `vitest`, `typescript`, `valibot`, `@hono/valibot-validator` versions are mutually compatible. Note: `@hono/node-multipart` and `watchexec` are NOT npm dependencies — `@hono/node-multipart` does not exist (Hono parses multipart natively via `c.req.parseBody()`), and `watchexec` is a Rust CLI installed as a system binary, not via pnpm.
+- Exact version pins for new dependencies: `@hono/node-server`, `@logtape/logtape`, `vite-node`, plus confirming the existing `hono`, `vite`, `vitest`, `typescript`, `valibot`, `@hono/valibot-validator` versions are mutually compatible. Note: `@hono/node-multipart` does not exist (Hono parses multipart natively via `c.req.parseBody()`), `watchexec` is a Rust CLI installed as a system binary (not via pnpm), and `@hono/vite-build/node` is intentionally not used (its auto-injected `serve()` + build-time port is incompatible with our runtime `PORT` env var).
 - The valibot schema for `config`: whether to mirror the upstream `LiteParseConfig` shape strictly (rejects unknown keys) or accept any object (passes the parsed JSON through to LiteParse, which validates internally).
 - Whether to keep `tsconfig.json` from the existing parent or write a new one (likely the latter, with `"strict": true`, `"noUncheckedIndexedAccess": true`, mirroring the old repo's strictness).
 - Whether to include a `.dockerignore` (recommended; mirrors `.gitignore` plus `src/`, `__tests__/`, `.git`).

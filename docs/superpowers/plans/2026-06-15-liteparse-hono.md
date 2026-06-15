@@ -925,7 +925,7 @@ Run:
 ls -la dist/
 ```
 
-Expected: `dist/index.js` exists, sized in the hundreds of KB (Vite bundles `@hono/node-server` and `@llamaindex/liteparse` into the single file).
+Expected: `dist/index.js` exists, a small ESM wrapper (~2.4 kB) that re-exports runtime `import` statements. Vite externalizes `node_modules` by default, so the heavy deps (`@hono/node-server`, `@llamaindex/liteparse`, etc.) stay as runtime imports resolved by `pnpm install --prod` in the runtime image.
 
 - [ ] **Step 3: Run the built artifact**
 
@@ -1008,7 +1008,7 @@ pnpm start
 |-----|---------|-------------|
 | `PORT` | `5707` | HTTP port the server binds. |
 | `LITEPARSE_API_KEY` | unset | If set, all routes (except `/health`) require `Authorization: Bearer <key>`. If unset, auth is disabled and a warning is logged at startup. |
-| `LOG_LEVEL` | `info` | One of `debug`, `info`, `warn`, `error`, `fatal`. |
+| `LOG_LEVEL` | `info` | One of `debug`, `info`, `warning`, `error`, `fatal`. |
 
 ## Test
 
