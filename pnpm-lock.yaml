@@ -226,9 +226,6 @@ importers:
         specifier: ^1.4.1
         version: 1.4.1(typescript@6.0.3)
     devDependencies:
-      '@hono/vite-build':
-        specifier: ^1.0.0
-        version: 1.11.1(hono@4.12.25)
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.21
@@ -426,12 +423,6 @@ packages:
     peerDependencies:
       hono: '>=3.9.0'
       valibot: ^1.0.0 || ^1.0.0-beta.4 || ^1.0.0-rc
-
-  '@hono/vite-build@1.11.1':
-    resolution: {integrity: sha512-EQJmFL7G+71MXZQ/mmywNl4qW6DSyjTdC30cq7mlDS451a1/jE86old0M2DCWzNGCO50sv7CzQDYkz4L5dq5VQ==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: '*'
 
   '@hyzyla/pdfium@2.1.13':
     resolution: {integrity: sha512-4J+xMFJW6V+jktxor6Lsk/2YdPCpeY+Ga69J98uyNQwYESkAsUDxz8BeFU0ZbZJIJ+fK3J6bm61gmwWnUzVU1g==}
@@ -1589,10 +1580,6 @@ snapshots:
     dependencies:
       hono: 4.12.25
       valibot: 1.4.1(typescript@6.0.3)
-
-  '@hono/vite-build@1.11.1(hono@4.12.25)':
-    dependencies:
-      hono: 4.12.25
 
   '@hyzyla/pdfium@2.1.13': {}
 
