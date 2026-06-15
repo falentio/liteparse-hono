@@ -6,7 +6,7 @@
 
 **Architecture:** Two-layer separation — pure business logic (`src/parse.ts`) takes a `Buffer` and returns extracted text, knows nothing about HTTP. Hono HTTP layer (`src/app.ts`) handles multipart, validation, auth, content types, and status codes, and translates between the wire format and the business function. No HTTP-layer tests (per design).
 
-**Tech Stack:** Hono 4.x, `@hono/node-server`, `@hono/valibot-validator`, `@hono/vite-build/node`, valibot 1.x, `@logtape/logtape`, `@llamaindex/liteparse`, Vite 8.x, vitest 4.x, TypeScript 6.x, Node 22 LTS, pnpm, watchexec (system binary, not npm), vite-node.
+**Tech Stack:** Hono 4.x, `@hono/node-server`, `@hono/valibot-validator`, valibot 1.x, `@logtape/logtape`, `@llamaindex/liteparse`, Vite 8.x (plain SSR build, no `@hono/vite-build/node`), vitest 4.x, TypeScript 6.x, Node 22 LTS, pnpm, watchexec (system binary, not npm), vite-node.
 
 ---
 
@@ -15,7 +15,7 @@
 **Created:**
 - `package.json` (modified — fills in stub)
 - `tsconfig.json` (editor config only, `noEmit`)
-- `vite.config.ts` (`@hono/vite-build/node` plugin)
+- `vite.config.ts` (plain Vite SSR build, `src/index.ts` as entry, output `dist/index.js`)
 - `.gitignore` (node_modules, dist, .env, .DS_Store)
 - `.dockerignore` (node_modules, src, __tests__, .git, docs)
 - `src/parse.ts` (business logic, ~15 lines)
@@ -76,7 +76,6 @@ Replace the entire file with:
     "valibot": "^1.4.1"
   },
   "devDependencies": {
-    "@hono/vite-build": "^1.0.0",
     "@types/node": "^22.0.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
@@ -197,12 +196,26 @@ Create the file with:
 
 ```ts
 import { defineConfig } from "vite";
-import build from "@hono/vite-build/node";
 
 export default defineConfig({
-  plugins: [build({ entry: "./src/index.ts" })],
+  build: {
+    target: "node22",
+    ssr: true,
+    outDir: "dist",
+    emptyOutDir: true,
+    minify: true,
+    rollupOptions: {
+      input: "src/index.ts",
+      output: {
+        entryFileNames: "index.js",
+        format: "esm",
+      },
+    },
+  },
 });
 ```
+
+> **Why not `@hono/vite-build/node`?** That plugin's model is incompatible: it auto-injects `serve()` with a build-time port (no runtime `PORT` env var), and requires `src/index.ts` to default-export a Hono app (it then registers `.fetch` on its own internal app). We need `src/index.ts` to be the bootstrap (top-level `await configureLogger(); serve({ ..., port: Number(process.env.PORT) ?? 5707 })`), so we use plain Vite SSR build with `src/index.ts` as the explicit entry. Output is `dist/index.js` (single ESM bundle), started by `node dist/index.js` in the Dockerfile runtime stage.
 
 - [ ] **Step 3: Verify typecheck runs (should pass with no source files yet)**
 
@@ -630,7 +643,8 @@ const MAX_FILE_BYTES = 30 * 1024 * 1024;
 export function createApp() {
   const app = new Hono();
 
-  app.use("*", authMiddleware);
+  app.use("/parse", authMiddleware);
+  app.use("/parse/*", authMiddleware);
 
   app.get("/health", (c) => c.text("OK"));
 
@@ -1227,7 +1241,7 @@ Expected: ~14 commits, one per task, in chronological order. The submodule point
 - README and API_SPEC → Task 13
 - Internal-only, `private: true` in package.json → Task 1
 - Node 22 LTS, pnpm lockfile → Task 1
-- Vite + `@hono/vite-build/node` for build, `vite-node` for dev → Task 2 (config), Task 9 (dev script)
+- Vite SSR build (`src/index.ts` as entry, `dist/index.js` output) for prod, `vite-node` for dev → Task 2 (config), Task 9 (dev script)
 - Watchexec for dev loop → Task 1 (script), Task 9 (verified)
 - Submodule kept, deletion is a follow-up → out of scope, called out in Task 15 verification
 
