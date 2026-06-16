@@ -68,7 +68,7 @@ export function createApp() {
         done = true;
 
         if (!w.aborted) {
-          await w.write(result.text);
+          await w.write(`__SUCCESS__:${result.text}`);
         }
 
         log.info("Completed in {durationMs}ms", {
