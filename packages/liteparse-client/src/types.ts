@@ -18,8 +18,8 @@ export interface ClientOptions {
 }
 
 export const tokens = {
-  success: "__SUCCESS__:",
-  error: "__ERROR__:",
+  successPrefix: "__SUCCESS__:",
+  errorPrefix: "__ERROR__:",
 } as const;
 
 export type OutputFormat = "json" | "text";
