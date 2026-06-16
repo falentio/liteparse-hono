@@ -1,3 +1,6 @@
+import { toFormData } from "./fetch-input.js";
+import type { LiteParseConfig, ParseInput, ParseOptions } from "./types.js";
+
 export function stringToReadableStream(
   ...chunks: string[]
 ): ReadableStream<Uint8Array> {
@@ -38,4 +41,20 @@ export function mockFetch(
     const req = input instanceof Request ? input : new Request(input, init);
     return handler(req);
   }) as typeof fetch;
+}
+
+export function multipartRequestFromInput(
+  input: ParseInput,
+  opts: ParseOptions = {},
+  baseUrl = "https://api.example.com",
+  stream = false,
+): Request {
+  const path = stream ? "/parse-stream" : "/parse";
+  const url = `${baseUrl}${path}`;
+  const filename =
+    input instanceof File ? input.name : (opts.filename ?? "buffer.bin");
+  const mimetype =
+    input instanceof File ? input.type : opts.mimetype;
+  const fd = toFormData(input, filename, mimetype, opts.config as Partial<LiteParseConfig> | undefined);
+  return new Request(url, { method: "POST", body: fd });
 }

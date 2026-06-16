@@ -9,12 +9,14 @@ export interface ParseOptions {
   filename?: string;
   mimetype?: string;
   signal?: AbortSignal;
+  config?: Partial<LiteParseConfig>;
 }
 
 export interface ClientOptions {
-  apiKey: string;
   baseUrl?: string;
-  fetchImpl?: typeof globalThis.fetch;
+  apiKey?: string;
+  stream?: boolean;
+  fetch?: typeof globalThis.fetch;
 }
 
 export const tokens = {
