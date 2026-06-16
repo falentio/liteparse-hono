@@ -27,7 +27,38 @@ export interface ClientOptions {
    */
   endpoint?: "parse" | "parse-stream";
   fetch?: typeof globalThis.fetch;
+  /**
+   * Maximum number of retry attempts after the first failure. Set to `0` to disable.
+   * Retries are attempted on HTTP 502/503/504 and on internal client timeout.
+   * @defaultValue 3
+   */
+  maxRetries?: number;
+  /**
+   * Base delay (ms) between retry attempts. The actual delay is exponential with jitter:
+   * `retryDelayMs * 2^attempt + random(0, retryDelayMs)ms`.
+   * @defaultValue 500
+   */
+  retryDelayMs?: number;
+  /**
+   * Per-attempt request timeout (ms). A fresh timeout is started for each retry attempt.
+   * If the timeout fires, the error is `Result.err` with `kind: "aborted"` and `reason: "timeout"`.
+   * @defaultValue 120000
+   */
+  timeoutMs?: number;
 }
+
+/** Default `maxRetries` when not configured on `ClientOptions`. */
+export const DEFAULT_MAX_RETRIES = 3;
+/** Default `retryDelayMs` (base for exponential backoff with jitter). */
+export const DEFAULT_RETRY_DELAY_MS = 500;
+/** Default `timeoutMs` (per-attempt request timeout). */
+export const DEFAULT_TIMEOUT_MS = 120000;
+
+/** HTTP status codes that the client retries on. */
+export const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([502, 503, 504]);
+
+/** Reason the request was aborted. */
+export type AbortReason = "user" | "timeout";
 
 export const tokens = {
   successPrefix: "__SUCCESS__:",

@@ -2,12 +2,15 @@ import { describe, it, expect } from "vitest";
 import { LiteparseClient } from "../src/client";
 import { mockFetch, stringToReadableStream, multipartRequestFromInput } from "../src/test-utils";
 
-function makeClient(overrides: Partial<{ endpoint: "parse" | "parse-stream"; apiKey: string; baseUrl: string; fetch: typeof fetch }> = {}) {
+function makeClient(overrides: Partial<{ endpoint: "parse" | "parse-stream"; apiKey: string; baseUrl: string; fetch: typeof fetch; maxRetries: number; retryDelayMs: number; timeoutMs: number }> = {}) {
   return new LiteparseClient({
     baseUrl: overrides.baseUrl ?? "https://api.example.com",
     endpoint: overrides.endpoint ?? "parse",
     apiKey: overrides.apiKey,
     fetch: overrides.fetch,
+    maxRetries: overrides.maxRetries,
+    retryDelayMs: overrides.retryDelayMs,
+    timeoutMs: overrides.timeoutMs,
   });
 }
 
@@ -158,6 +161,102 @@ describe("LiteparseClient — stream", () => {
       expect(result.error.message).toBe("tesseract crashed");
     } else {
       throw new Error("expected stream_token");
+    }
+  });
+});
+
+describe("LiteparseClient — retry/timeout", () => {
+  it("retries on 503 and returns success on the second attempt", async () => {
+    let calls = 0;
+    const fetchMock = mockFetch(async () => {
+      calls++;
+      if (calls === 1) return new Response("server error", { status: 503 });
+      return new Response("ok", { status: 200 });
+    });
+    const client = makeClient({ fetch: fetchMock, retryDelayMs: 1 });
+    const result = await client.parse(new Uint8Array([0]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toBe("ok");
+    expect(calls).toBe(2);
+  });
+
+  it("does not retry on 4xx errors", async () => {
+    let calls = 0;
+    const fetchMock = mockFetch(async () => {
+      calls++;
+      return new Response(JSON.stringify({ detail: "bad input" }), { status: 400 });
+    });
+    const client = makeClient({ fetch: fetchMock, retryDelayMs: 1 });
+    const result = await client.parse(new Uint8Array([0]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.kind === "http") {
+      expect(result.error.status).toBe(400);
+    } else {
+      throw new Error("expected http error");
+    }
+    expect(calls).toBe(1);
+  });
+
+  it("stops after maxRetries attempts and returns the last error", async () => {
+    let calls = 0;
+    const fetchMock = mockFetch(async () => {
+      calls++;
+      return new Response("server error", { status: 503 });
+    });
+    const client = makeClient({ fetch: fetchMock, maxRetries: 2, retryDelayMs: 1 });
+    const result = await client.parse(new Uint8Array([0]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+    });
+    expect(result.ok).toBe(false);
+    expect(calls).toBe(3); // 1 initial + 2 retries
+  });
+
+  it("short-circuits the retry loop when user signal aborts", async () => {
+    let calls = 0;
+    const fetchMock = mockFetch(async () => {
+      calls++;
+      return new Response("server error", { status: 503 });
+    });
+    const client = makeClient({ fetch: fetchMock, maxRetries: 3, retryDelayMs: 50 });
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 10);
+    const result = await client.parse(new Uint8Array([0]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+      signal: ctrl.signal,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.kind === "aborted") {
+      expect(result.error.reason).toBe("user");
+    } else {
+      throw new Error("expected aborted user");
+    }
+  });
+
+  it("returns aborted('timeout') when the client timeout fires", async () => {
+    const fetchMock = mockFetch(async (req) => {
+      await new Promise<void>((resolve) => {
+        req.signal.addEventListener("abort", () => resolve());
+      });
+      throw new DOMException("aborted", "AbortError");
+    });
+    const client = makeClient({ fetch: fetchMock, timeoutMs: 50, retryDelayMs: 1 });
+    const result = await client.parse(new Uint8Array([0]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.kind === "aborted") {
+      expect(result.error.reason).toBe("timeout");
+    } else {
+      throw new Error("expected aborted timeout");
     }
   });
 });

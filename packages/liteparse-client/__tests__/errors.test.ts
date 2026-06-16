@@ -27,9 +27,12 @@ describe("LiteparseError factories", () => {
     }
   });
 
-  it("aborted has no payload", () => {
-    const e = aborted();
+  it("aborted has a required reason", () => {
+    const e = aborted("user");
     expect(e.kind).toBe("aborted");
+    if (e.kind === "aborted") {
+      expect(e.reason).toBe("user");
+    }
   });
 
   it("httpError carries status and detail", () => {
