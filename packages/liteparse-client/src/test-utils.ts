@@ -1,5 +1,5 @@
 import { toFormData } from "./fetch-input.js";
-import type { LiteParseConfig, ParseInput, ParseOptions } from "./types.js";
+import type { ParseInput, ParseOptions } from "./types.js";
 
 const PATHS = {
   parse: "/parse",
@@ -78,6 +78,6 @@ export function multipartRequestFromInput(
     input instanceof File ? input.name : (opts.filename ?? "buffer.bin");
   const mimetype =
     input instanceof File ? input.type : opts.mimetype;
-  const fd = toFormData(input, filename, mimetype, opts.config as Partial<LiteParseConfig> | undefined);
+  const fd = toFormData(input, filename, mimetype, opts.config);
   return new Request(url, { method: "POST", body: fd });
 }

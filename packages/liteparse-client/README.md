@@ -112,14 +112,16 @@ const result = await client.parse(bytes, {
 
 ### Stream from a `ReadableStream`
 
-Convert a stream of bytes into a `Blob` and pass it through, or hit the streaming endpoint directly:
+Buffer the stream into a `Blob` first, then pass it through. (To consume
+the server's response as a stream instead, see the `/parse-stream`
+endpoint — see [examples/03-stream.ts](./examples/03-stream.ts).)
 
 ```ts
 const stream = new ReadableStream<Uint8Array>({ /* ... */ });
-const result = await client.parse(new Response(stream).body!, {
+const blob = await new Response(stream).blob();
+const result = await client.parse(blob, {
   filename: "doc.pdf",
   mimetype: "application/pdf",
-  // endpoint: "parse-stream" // for token-framed responses
 });
 ```
 
