@@ -10,15 +10,15 @@ Parses a single document and returns extracted text.
 
 - `Content-Type: multipart/form-data`
 - Form fields:
-  - `file` (required, `File`) — the document to parse. Max 30MB.
+  - `file` (required, `File`) — the document to parse. Max `LITEPARSE_MAX_SIZE_MB` MB (default 30).
   - `config` (optional, `string`) — JSON-serialized `Partial<LiteParseConfig>` (e.g. `{"targetPages":"1"}`).
 
 ### Responses
 
 - `200 text/plain` — extracted text from the document, joined across pages.
-- `400 { "detail": string }` — missing `file` field, or malformed `config` JSON.
+- `400 { "detail": string }` — missing `file` field, malformed `config` JSON, or `ocrEnabled: true` in the config while `LITEPARSE_OCR` is unset or `false` (detail: `"OCR is disabled; set LITEPARSE_OCR=true to enable"`).
 - `401 { "detail": "Unauthorized" }` — `LITEPARSE_API_KEY` is set and the request lacks a valid `Authorization: Bearer <key>` header.
-- `413 { "detail": "File too large; max 30MB" }` — `file.size` exceeds 30MB.
+- `413 { "detail": "File too large; max <N>MB" }` — `file.size` exceeds `LITEPARSE_MAX_SIZE_MB` (default 30). `<N>` is the value of the env var.
 - `500 { "detail": string }` — internal parse failure.
 
 ### Example
