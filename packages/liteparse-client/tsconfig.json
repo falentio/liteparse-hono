@@ -6,6 +6,7 @@
     "lib": ["ES2022", "DOM"],
 
     "strict": true,
+    "types": ["vitest/globals"],
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
