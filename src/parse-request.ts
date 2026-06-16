@@ -1,7 +1,6 @@
 import * as v from "valibot";
 import { parseFormSchema } from "./schemas/parse";
-
-const MAX_FILE_BYTES = 30 * 1024 * 1024;
+import { getMaxSizeBytes, getOcrConfigError } from "./config";
 
 export type ParsedRequest = {
   buffer: Buffer;
@@ -24,9 +23,10 @@ export async function parseRequest(
     );
   }
 
-  if (file.size > MAX_FILE_BYTES) {
+  const maxBytes = getMaxSizeBytes();
+  if (file.size > maxBytes) {
     return c.json(
-      { detail: `File too large; max ${MAX_FILE_BYTES / 1024 / 1024}MB` },
+      { detail: `File too large; max ${maxBytes / 1024 / 1024}MB` },
       413,
     );
   }
@@ -45,6 +45,11 @@ export async function parseRequest(
       );
     }
     config = parsed.output as Record<string, unknown>;
+  }
+
+  const ocrError = getOcrConfigError(config);
+  if (ocrError) {
+    return c.json({ detail: ocrError }, 400);
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
