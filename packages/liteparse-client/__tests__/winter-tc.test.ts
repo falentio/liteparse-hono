@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { assertWinterTcGlobals } from "../src/node";
+import { assertWinterTcGlobals } from "../src/internals/winter-tc";
 
 describe("assertWinterTcGlobals", () => {
   it("throws when fetch is missing", () => {
