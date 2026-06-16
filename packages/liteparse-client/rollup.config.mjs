@@ -20,11 +20,6 @@ export default entries.flatMap((entry) => [
       nodeResolve(),
       typescript({
         tsconfig: "./tsconfig.json",
-        compilerOptions: {
-          noEmit: false,
-          declaration: false,
-          declarationDir: undefined,
-        },
       }),
     ],
   },

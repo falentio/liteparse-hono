@@ -120,7 +120,7 @@ describe("LiteparseClient — non-stream", () => {
     const client = makeClient();
     const result = await client.parse(new Uint8Array([0]), {
       mimetype: "application/octet-stream",
-    } as Parameters<typeof client.parse>[1]);
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.kind).toBe("invalid_input");
   });

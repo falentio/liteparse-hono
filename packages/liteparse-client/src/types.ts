@@ -8,7 +8,6 @@ export type ParseInput = File | Blob | ArrayBuffer | ArrayBufferView;
 export interface ParseOptions {
   filename?: string;
   mimetype?: string;
-  signal?: AbortSignal;
   config?: Partial<LiteParseConfig>;
 }
 

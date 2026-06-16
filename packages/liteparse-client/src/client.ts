@@ -5,6 +5,7 @@ import {
   networkError,
   aborted,
   httpError,
+  decodeError,
 } from "./errors.js";
 import { toFormData } from "./fetch-input.js";
 import { readStreamBody } from "./stream.js";
@@ -90,7 +91,7 @@ export class LiteparseClient {
 
     if (this.stream) {
       if (!response.body) {
-        return err({ kind: "decode", message: "empty response body" });
+        return err(decodeError("empty response body"));
       }
       return readStreamBody(response.body);
     }
