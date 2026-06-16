@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { LiteparseClient } from "../src/client";
 import { mockFetch, stringToReadableStream, multipartRequestFromInput } from "../src/test-utils";
+
+vi.mock("../src/version.js", () => ({
+  VERSION: "0.1.0",
+}));
+
+const EXPECTED_VERSION = "0.1.0";
 
 function makeClient(overrides: Partial<{ endpoint: "parse" | "parse-stream"; apiKey: string; baseUrl: string; fetch: typeof fetch; maxRetries: number; retryDelayMs: number; timeoutMs: number }> = {}) {
   return new LiteparseClient({
@@ -43,6 +49,42 @@ describe("LiteparseClient — non-stream", () => {
       mimetype: "application/octet-stream",
     });
     expect(capturedAuth).toBe("Bearer secret-123");
+  });
+
+  it("sends User-Agent header matching @falentio/liteparse-client/<semver> on every request", async () => {
+    let captured: Request | null = null;
+    const fetchMock = mockFetch(async (req) => {
+      captured = req;
+      return new Response("ok", { status: 200 });
+    });
+    const client = makeClient({ apiKey: "k", fetch: fetchMock });
+    const result = await client.parse(new Uint8Array([1]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+    });
+    expect(result.ok).toBe(true);
+    expect(captured).not.toBeNull();
+    const ua = captured!.headers.get("User-Agent");
+    expect(ua).toMatch(/^@falentio\/liteparse-client\/\d+\.\d+\.\d+$/);
+    expect(ua).toBe(`@falentio/liteparse-client/${EXPECTED_VERSION}`);
+  });
+
+  it("sends User-Agent even without apiKey", async () => {
+    let captured: Request | null = null;
+    const fetchMock = mockFetch(async (req) => {
+      captured = req;
+      return new Response("ok", { status: 200 });
+    });
+    const client = makeClient({ fetch: fetchMock });
+    await client.parse(new Uint8Array([1]), {
+      filename: "x.bin",
+      mimetype: "application/octet-stream",
+    });
+    expect(captured).not.toBeNull();
+    expect(captured!.headers.get("User-Agent")).toMatch(
+      /^@falentio\/liteparse-client\/\d+\.\d+\.\d+$/,
+    );
+    expect(captured!.headers.get("Authorization")).toBeNull();
   });
 
   it("returns Result.err kind: http for 4xx responses with parsed detail", async () => {

@@ -9,6 +9,7 @@ import {
 } from "./errors.js";
 import { toFormData } from "./fetch-input.js";
 import { readStreamBody } from "./stream.js";
+import { VERSION } from "./version.js";
 import {
   type ClientOptions,
   type ParseInput,
@@ -98,7 +99,9 @@ export class LiteparseClient {
     const path = PATHS[this.endpoint];
     const url = `${this.baseUrl}${path}`;
     const body = toFormData(input, filename, mimetype, opts.config);
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      "User-Agent": `@falentio/liteparse-client/${VERSION}`,
+    };
     if (this.apiKey) {
       headers["Authorization"] = `Bearer ${this.apiKey}`;
     }

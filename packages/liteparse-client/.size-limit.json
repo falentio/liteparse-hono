@@ -1,0 +1,5 @@
+[
+  { "name": "index.js (gzip)",      "path": "dist/index.js",      "limit": "2.5 KB", "gzip": true },
+  { "name": "node.js (gzip)",       "path": "dist/node.js",       "limit": "500 B", "gzip": true },
+  { "name": "test-utils.js (gzip)", "path": "dist/test-utils.js", "limit": "1 KB",   "gzip": true }
+]

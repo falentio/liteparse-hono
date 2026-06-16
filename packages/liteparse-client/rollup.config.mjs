@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
 import typescript from "@rollup/plugin-typescript";
 import nodeResolve from "@rollup/plugin-node-resolve";
+import replace from "@rollup/plugin-replace";
 import dts from "rollup-plugin-dts";
+
+const pkg = JSON.parse(readFileSync("./package.json", "utf-8"));
 
 const entries = [
   { input: "src/index.ts", file: "index.js" },
@@ -17,6 +21,10 @@ export default entries.flatMap((entry) => [
       sourcemap: true,
     },
     plugins: [
+      replace({
+        PKG_VERSION: JSON.stringify(pkg.version),
+        preventAssignment: true,
+      }),
       nodeResolve(),
       typescript({
         tsconfig: "./tsconfig.json",
