@@ -33,6 +33,10 @@
   "scripts": {
     "build": "rollup -c",
     "build:watch": "rollup -c -w",
+    "example:basic": "tsx examples/01-basic.ts",
+    "example:file": "tsx examples/02-file.ts",
+    "example:stream": "tsx examples/03-stream.ts",
+    "example:cancellation": "tsx examples/04-cancellation.ts",
     "size": "size-limit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -48,6 +52,7 @@
     "rollup-plugin-dts": "^6.2.0",
     "size-limit": "^12.1.0",
     "tslib": "^2.8.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.0",
     "vitest": "^4.1.0"
   }

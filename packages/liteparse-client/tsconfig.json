@@ -19,5 +19,5 @@
     "verbatimModuleSyntax": false,
     "noEmit": true
   },
-  "include": ["src/**/*", "__tests__/**/*", "rollup.config.mjs", "vitest.config.ts"]
+  "include": ["src/**/*", "__tests__/**/*", "examples/**/*", "rollup.config.mjs", "vitest.config.ts"]
 }

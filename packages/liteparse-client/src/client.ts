@@ -34,7 +34,7 @@ export class LiteparseClient {
   private readonly retryDelayMs: number;
   private readonly timeoutMs: number;
 
-  constructor(opts: ClientOptions) {
+  constructor(opts: ClientOptions = {}) {
     this.baseUrl = (opts.baseUrl ?? "https://api.liteparse.dev").replace(/\/+$/, "");
     this.apiKey = opts.apiKey;
     this.endpoint = opts.endpoint ?? "parse";

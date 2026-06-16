@@ -41,6 +41,11 @@ describe("LiteparseClient — non-stream", () => {
     if (result.ok) expect(result.value).toBe("extracted text");
   });
 
+  it("constructs with no args and uses all defaults", async () => {
+    const client = new LiteparseClient();
+    expect(client).toBeInstanceOf(LiteparseClient);
+  });
+
   it("attaches Authorization header when apiKey is set", async () => {
     let capturedAuth: string | null = null;
     const fetchMock = mockFetch(async (req) => {

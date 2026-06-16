@@ -42,6 +42,17 @@ if (result.ok) {
 }
 ```
 
+## Examples
+
+Runnable examples live in [`examples/`](./examples). Each is a self-contained TypeScript file you can run with [`tsx`](https://tsx.is):
+
+| File | Description | Command |
+|------|-------------|---------|
+| `01-basic.ts` | Non-streaming parse of an in-memory buffer | `pnpm example:basic` |
+| `02-file.ts` | Read a PDF from disk and parse it | `pnpm example:file [path]` |
+| `03-stream.ts` | Use the `/parse-stream` endpoint | `pnpm example:stream` |
+| `04-cancellation.ts` | Cancel an in-flight parse via `AbortSignal` | `pnpm example:cancellation` |
+
 ## Options
 
 The `LiteparseClient` constructor accepts these options (all optional except where noted):
