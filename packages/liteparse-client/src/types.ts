@@ -9,12 +9,23 @@ export interface ParseOptions {
   filename?: string;
   mimetype?: string;
   config?: Partial<LiteParseConfig>;
+  /**
+   * `AbortSignal` to cancel the request. If already aborted, the request is not
+   * sent and a `Result.err` with `kind: "aborted"` is returned.
+   */
+  signal?: AbortSignal;
 }
 
 export interface ClientOptions {
   baseUrl?: string;
   apiKey?: string;
-  stream?: boolean;
+  /**
+   * Which server endpoint to use.
+   * - "parse": POST /parse — plain text or JSON response.
+   * - "parse-stream": POST /parse-stream — response prefixed with `__SUCCESS__:` or `__ERROR__:` tokens.
+   * @defaultValue "parse"
+   */
+  endpoint?: "parse" | "parse-stream";
   fetch?: typeof globalThis.fetch;
 }
 

@@ -15,24 +15,29 @@ import type {
   ParseOptions,
 } from "./types.js";
 
+const PATHS = {
+  parse: "/parse",
+  "parse-stream": "/parse-stream",
+} as const;
+
 export class LiteparseClient {
   private readonly baseUrl: string;
   private readonly apiKey?: string;
-  private readonly stream: boolean;
+  private readonly endpoint: "parse" | "parse-stream";
   private readonly fetch: typeof fetch;
 
   constructor(opts: ClientOptions) {
     this.baseUrl = (opts.baseUrl ?? "https://api.liteparse.dev").replace(/\/+$/, "");
     this.apiKey = opts.apiKey;
-    this.stream = opts.stream ?? false;
+    this.endpoint = opts.endpoint ?? "parse";
     this.fetch = opts.fetch ?? globalThis.fetch;
   }
 
   async parse(
     input: ParseInput,
     opts: ParseOptions = {},
-    signal?: AbortSignal,
   ): Promise<Result<string, LiteparseError>> {
+    const signal = opts.signal;
     const filename = resolveFilename(input, opts);
     const mimetype = resolveMimetype(input, opts);
     if (!filename || !mimetype) {
@@ -47,7 +52,7 @@ export class LiteparseClient {
       );
     }
 
-    const path = this.stream ? "/parse-stream" : "/parse";
+    const path = PATHS[this.endpoint];
     const url = `${this.baseUrl}${path}`;
     const body = toFormData(input, filename, mimetype, opts.config);
     const headers: Record<string, string> = {};
@@ -89,7 +94,7 @@ export class LiteparseClient {
       return err(httpError(response.status, detail));
     }
 
-    if (this.stream) {
+    if (this.endpoint === "parse-stream") {
       if (!response.body) {
         return err(decodeError("empty response body"));
       }

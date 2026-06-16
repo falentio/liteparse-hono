@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { LiteparseClient } from "../src/client";
 import { mockFetch, stringToReadableStream, multipartRequestFromInput } from "../src/test-utils";
 
-function makeClient(overrides: Partial<{ stream: boolean; apiKey: string; baseUrl: string; fetch: typeof fetch }> = {}) {
+function makeClient(overrides: Partial<{ endpoint: "parse" | "parse-stream"; apiKey: string; baseUrl: string; fetch: typeof fetch }> = {}) {
   return new LiteparseClient({
     baseUrl: overrides.baseUrl ?? "https://api.example.com",
-    stream: overrides.stream ?? false,
+    endpoint: overrides.endpoint ?? "parse",
     apiKey: overrides.apiKey,
     fetch: overrides.fetch,
   });
@@ -111,7 +111,8 @@ describe("LiteparseClient — non-stream", () => {
     const result = await client.parse(new Uint8Array([0]), {
       filename: "x.bin",
       mimetype: "application/octet-stream",
-    }, ctrl.signal);
+      signal: ctrl.signal,
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.kind).toBe("aborted");
   });
@@ -134,7 +135,7 @@ describe("LiteparseClient — stream", () => {
         stringToReadableStream("   __SUCCESS__:streamed text   "),
       );
     });
-    const client = makeClient({ stream: true, fetch: fetchMock });
+    const client = makeClient({ endpoint: "parse-stream", fetch: fetchMock });
     const result = await client.parse(new Uint8Array([0]), {
       filename: "x.bin",
       mimetype: "application/octet-stream",
@@ -147,7 +148,7 @@ describe("LiteparseClient — stream", () => {
     const fetchMock = mockFetch(async () =>
       new Response(stringToReadableStream(" __ERROR__:tesseract crashed ")),
     );
-    const client = makeClient({ stream: true, fetch: fetchMock });
+    const client = makeClient({ endpoint: "parse-stream", fetch: fetchMock });
     const result = await client.parse(new Uint8Array([0]), {
       filename: "x.bin",
       mimetype: "application/octet-stream",

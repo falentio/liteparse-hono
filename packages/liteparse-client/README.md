@@ -20,7 +20,7 @@ import { LiteparseClient } from "@falentio/liteparse-client";
 const client = new LiteparseClient({
   baseUrl: "https://api.example.com",
   apiKey: process.env.API_KEY,         // optional; mirrors server's LITEPARSE_API_KEY
-  stream: false,                       // false → POST /parse; true → POST /parse-stream
+  endpoint: "parse",                   // "parse" → POST /parse; "parse-stream" → POST /parse-stream
 });
 
 const result = await client.parse(
@@ -44,12 +44,12 @@ if (result.ok) {
 
 ## Cancellation
 
-Pass an `AbortSignal` as the third argument:
+Pass an `AbortSignal` on the options object:
 
 ```ts
 const ctrl = new AbortController();
 setTimeout(() => ctrl.abort(), 5000);
-const result = await client.parse(input, opts, ctrl.signal);
+const result = await client.parse(input, { ...opts, signal: ctrl.signal });
 // → { ok: false, error: { kind: "aborted" } }
 ```
 
