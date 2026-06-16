@@ -1,10 +1,14 @@
 import { ok, err, type Result } from "./result.js";
-import { streamTokenError, decodeError } from "./errors.js";
+import {
+  streamTokenError,
+  decodeError,
+  type LiteparseError,
+} from "./errors.js";
 import { tokens } from "./types.js";
 
 export async function readStreamBody(
   body: ReadableStream<Uint8Array>,
-): Promise<Result<string, { kind: "stream_token"; message: string } | { kind: "decode"; message: string }>> {
+): Promise<Result<string, LiteparseError>> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
