@@ -2,6 +2,10 @@ import { describe, it, expect, vi } from "vitest";
 import { LiteparseClient } from "../src/client";
 import { mockFetch, stringToReadableStream, multipartRequestFromInput } from "../src/test-utils";
 
+// Keep in lockstep with `version` in package.json. Hardcoded because
+// vitest's vi.mock is hoisted above all imports, so reading package.json
+// at module scope races the mock factory's evaluation. The toBe assertion
+// below will fail on version bumps, forcing the bump to be applied here too.
 vi.mock("../src/version.js", () => ({
   VERSION: "0.1.0",
 }));
