@@ -88,6 +88,69 @@ If your use case is not idempotent (e.g., the server meters per-parse usage), se
 const client = new LiteparseClient({ baseUrl, apiKey, maxRetries: 0 });
 ```
 
+## Compatibility
+
+`LiteParseConfig` is a hand-maintained TypeScript mirror of the
+`@llamaindex/liteparse` server-side config (the upstream parser used by
+this server). The shape is verified against `@llamaindex/liteparse@1.5.3`
+at the time of this release. If the upstream package adds or renames
+fields, this mirror may drift. Please open an issue if you need a field
+that isn't yet exposed.
+
+## Recipes
+
+### Read a file from disk
+
+```ts
+import { readFile } from "node:fs/promises";
+const bytes = await readFile("doc.pdf");
+const result = await client.parse(bytes, {
+  filename: "doc.pdf",
+  mimetype: "application/pdf",
+});
+```
+
+### Stream from a `ReadableStream`
+
+Convert a stream of bytes into a `Blob` and pass it through, or hit the streaming endpoint directly:
+
+```ts
+const stream = new ReadableStream<Uint8Array>({ /* ... */ });
+const result = await client.parse(new Response(stream).body!, {
+  filename: "doc.pdf",
+  mimetype: "application/pdf",
+  // endpoint: "parse-stream" // for token-framed responses
+});
+```
+
+### Retry budget via a wrapper
+
+Cap total retries across many concurrent calls with your own counter:
+
+```ts
+let budget = 10; // shared across calls
+async function parse(input: ParseInput, opts: ParseOptions) {
+  if (budget <= 0) return client.parse(input, { ...opts });
+  budget--;
+  const result = await client.parse(input, { ...opts });
+  if (!result.ok && result.error.kind === "http") budget++;
+  return result;
+}
+```
+
+### Custom fetch for instrumentation
+
+Wrap the original fetch to log request/response, then pass it via the `fetch` option:
+
+```ts
+const loggedFetch: typeof fetch = async (input, init) => {
+  const res = await globalThis.fetch(input, init);
+  console.log("→", input.toString(), res.status);
+  return res;
+};
+const client = new LiteparseClient({ baseUrl, fetch: loggedFetch });
+```
+
 ## Error kinds
 
 | `kind` | When | Shape |
@@ -105,7 +168,7 @@ const client = new LiteparseClient({ baseUrl, apiKey, maxRetries: 0 });
 |------|---------|
 | `@falentio/liteparse-client` | Main entry — `LiteparseClient` class + types |
 | `@falentio/liteparse-client/node` | Side-effect entry that throws on missing WinterTC globals |
-| `@falentio/liteparse-client/test-utils` | `stringToReadableStream`, `bytesToReadableStream`, `mockFetch`, `multipartRequestFromInput` |
+| `@falentio/liteparse-client/test-utils` | `stringToReadableStream`, `bytesToReadableStream`, `erroringReadableStream`, `mockFetch`, `multipartRequestFromInput` |
 
 ## Test utilities
 

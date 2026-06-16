@@ -3,11 +3,25 @@
 // and cannot import from there, so this interface is a hand-maintained
 // mirror. If the upstream type gains or changes fields, update this file.
 
+/** A document payload accepted by `parse()`. */
 export type ParseInput = File | Blob | ArrayBuffer | ArrayBufferView;
 
 export interface ParseOptions {
+  /**
+   * Filename to attach to the multipart upload. Required when `input` is not a
+   * `File` (the client cannot infer a name from a `Blob`, `ArrayBuffer`, or
+   * `ArrayBufferView`).
+   */
   filename?: string;
+  /**
+   * MIME type of the payload. Required when `input` is not a `File` or `Blob`
+   * with a `.type` set.
+   */
   mimetype?: string;
+  /**
+   * Partial server-side parser config. Only the fields you set are sent; the
+   * server fills in defaults for the rest.
+   */
   config?: Partial<LiteParseConfig>;
   /**
    * `AbortSignal` to cancel the request. If already aborted, the request is not
@@ -17,7 +31,15 @@ export interface ParseOptions {
 }
 
 export interface ClientOptions {
+  /**
+   * Server base URL. Trailing slashes are stripped.
+   * @defaultValue "https://api.liteparse.dev"
+   */
   baseUrl?: string;
+  /**
+   * API key sent as `Authorization: Bearer <apiKey>`. Omit for unauthenticated
+   * servers.
+   */
   apiKey?: string;
   /**
    * Which server endpoint to use.
@@ -26,6 +48,11 @@ export interface ClientOptions {
    * @defaultValue "parse"
    */
   endpoint?: "parse" | "parse-stream";
+  /**
+   * Custom `fetch` implementation. Use to inject a proxy, instrumentation, or
+   * a mock in tests.
+   * @defaultValue globalThis.fetch
+   */
   fetch?: typeof globalThis.fetch;
   /**
    * Maximum number of retry attempts after the first failure. Set to `0` to disable.
@@ -47,14 +74,14 @@ export interface ClientOptions {
   timeoutMs?: number;
 }
 
-/** Default `maxRetries` when not configured on `ClientOptions`. */
+/** Default `maxRetries` (3) when not configured on `ClientOptions`. */
 export const DEFAULT_MAX_RETRIES = 3;
-/** Default `retryDelayMs` (base for exponential backoff with jitter). */
+/** Default `retryDelayMs` (500) — base for exponential backoff with jitter. */
 export const DEFAULT_RETRY_DELAY_MS = 500;
-/** Default `timeoutMs` (per-attempt request timeout). */
+/** Default `timeoutMs` (120000) — per-attempt request timeout. */
 export const DEFAULT_TIMEOUT_MS = 120000;
 
-/** HTTP status codes that the client retries on. */
+/** HTTP status codes that the client retries on (502, 503, 504). */
 export const RETRYABLE_STATUSES: ReadonlySet<number> = new Set([502, 503, 504]);
 
 /** Reason the request was aborted. */
@@ -65,8 +92,10 @@ export const tokens = {
   errorPrefix: "__ERROR__:",
 } as const;
 
+/** Format the server writes the parsed body in. */
 export type OutputFormat = "json" | "text";
 
+/** Server-side grid debug options. */
 export interface GridDebugConfig {
   enabled: boolean;
   textFilter?: string[];
@@ -79,6 +108,16 @@ export interface GridDebugConfig {
   trace?: boolean;
 }
 
+/**
+ * Server-side parser configuration, passed through `ParseOptions.config`.
+ *
+ * @remarks
+ * This is a hand-maintained TypeScript mirror of `LiteParseConfig` in
+ * `@llamaindex/liteparse@1.5.3` (the upstream parser the server uses). The
+ * client is an independent package and cannot import from there. If the
+ * upstream type gains, renames, or removes fields, this mirror may drift —
+ * please open an issue if you need a field that isn't yet exposed.
+ */
 export interface LiteParseConfig {
   ocrLanguage: string | string[];
   ocrEnabled: boolean;

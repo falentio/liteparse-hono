@@ -25,6 +25,13 @@ const PATHS = {
   "parse-stream": "/parse-stream",
 } as const;
 
+/**
+ * A client for the liteparse-hono document parsing server.
+ *
+ * Wraps the multipart upload, the `__SUCCESS__:` / `__ERROR__:` stream-token
+ * protocol, and retry on transient HTTP / timeout errors. The `parse()`
+ * method returns a {@link Result} and never rejects.
+ */
 export class LiteparseClient {
   private readonly baseUrl: string;
   private readonly apiKey?: string;
@@ -34,6 +41,10 @@ export class LiteparseClient {
   private readonly retryDelayMs: number;
   private readonly timeoutMs: number;
 
+  /**
+   * @param opts - Client options. All fields are optional and have defaults;
+   * see {@link ClientOptions}.
+   */
   constructor(opts: ClientOptions = {}) {
     this.baseUrl = (opts.baseUrl ?? "https://api.liteparse.dev").replace(/\/+$/, "");
     this.apiKey = opts.apiKey;
@@ -44,6 +55,22 @@ export class LiteparseClient {
     this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   }
 
+  /**
+   * Parse a document and return its text content.
+   *
+   * @param input - The document payload (`File`, `Blob`, `ArrayBuffer`, or
+   * `ArrayBufferView`).
+   * @param opts - Per-request options: `filename`, `mimetype`, `config`, and
+   * an optional `signal` to cancel the in-flight request.
+   * @returns A `Result` whose value is the server's response body. On
+   * failure, the `error` is a {@link LiteparseError} discriminated by `kind`.
+   *
+   * @remarks
+   * Retries on HTTP 502/503/504 and on the internal `timeoutMs` deadline,
+   * up to `maxRetries` times, with exponential backoff + jitter. The method
+   * itself never rejects; cancellation, network errors, HTTP errors, and
+   * stream decode errors are all surfaced as `Result.err`.
+   */
   async parse(
     input: ParseInput,
     opts: ParseOptions = {},

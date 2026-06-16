@@ -1,24 +1,39 @@
 import { describe, it, expect } from "vitest";
 import { assertWinterTcGlobals } from "../src/internals/winter-tc";
 
+interface GlobalShape {
+  fetch: unknown;
+  ReadableStream: unknown;
+  Blob: unknown;
+  File: unknown;
+  FormData: unknown;
+  Request: unknown;
+  Response: unknown;
+  Headers: unknown;
+  TextEncoder: unknown;
+  TextDecoder: unknown;
+  URL: unknown;
+  URLSearchParams: unknown;
+}
+
 describe("assertWinterTcGlobals", () => {
   it("throws when fetch is missing", () => {
-    const saved = (globalThis as Record<string, unknown>).fetch;
-    delete (globalThis as Record<string, unknown>).fetch;
+    const saved = (globalThis as GlobalShape).fetch;
+    delete (globalThis as GlobalShape).fetch;
     try {
       expect(() => assertWinterTcGlobals()).toThrow(/fetch/);
     } finally {
-      (globalThis as Record<string, unknown>).fetch = saved;
+      (globalThis as GlobalShape).fetch = saved;
     }
   });
 
   it("throws when ReadableStream is missing", () => {
-    const saved = (globalThis as Record<string, unknown>).ReadableStream;
-    delete (globalThis as Record<string, unknown>).ReadableStream;
+    const saved = (globalThis as GlobalShape).ReadableStream;
+    delete (globalThis as GlobalShape).ReadableStream;
     try {
       expect(() => assertWinterTcGlobals()).toThrow(/ReadableStream/);
     } finally {
-      (globalThis as Record<string, unknown>).ReadableStream = saved;
+      (globalThis as GlobalShape).ReadableStream = saved;
     }
   });
 
