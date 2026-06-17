@@ -1,6 +1,6 @@
 {
   "name": "@falentio/liteparse-client",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "WinterTC-compliant client for the liteparse-hono document parsing server",
   "type": "module",
   "license": "MIT",
