@@ -69,7 +69,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
-          token: ${{ secrets.NPM_TOKEN }}
           cache: pnpm
           cache-dependency-path: packages/liteparse-client/pnpm-lock.yaml
 
@@ -85,6 +84,10 @@ jobs:
             exit 1
           fi
           echo "Tag v$TAG matches package.json version $PKG_VERSION"
+
+      - name: Configure npm auth
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
 
       - name: Publish
         run: npm publish --provenance --access public
