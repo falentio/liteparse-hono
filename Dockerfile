@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # Build stage
-FROM node:22-slim AS build
+FROM node:24-slim AS build
 WORKDIR /app
 
 # Install system dependencies required by @llamaindex/liteparse.
@@ -30,7 +30,7 @@ COPY src ./src
 RUN pnpm build
 
 # Runtime stage
-FROM node:22-slim
+FROM node:24-slim
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

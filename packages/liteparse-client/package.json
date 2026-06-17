@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "sideEffects": false,
   "repository": {
@@ -55,7 +55,7 @@
     "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-typescript": "^12.1.0",
     "@size-limit/preset-small-lib": "^12.1.0",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "rollup": "^4.30.0",
     "rollup-plugin-dts": "^6.2.0",
     "size-limit": "^12.1.0",
