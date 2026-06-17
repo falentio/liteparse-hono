@@ -8,6 +8,14 @@
     "node": ">=22"
   },
   "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falentio/liteparse-hono.git"
+  },
+  "bugs": {
+    "url": "https://github.com/falentio/liteparse-hono/issues"
+  },
+  "homepage": "https://github.com/falentio/liteparse-hono#readme",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
