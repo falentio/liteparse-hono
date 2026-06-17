@@ -13,6 +13,14 @@
       "version": "11.5.0"
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falentio/liteparse-hono.git"
+  },
+  "bugs": {
+    "url": "https://github.com/falentio/liteparse-hono/issues"
+  },
+  "homepage": "https://github.com/falentio/liteparse-hono#readme",
   "scripts": {
     "dev": "watchexec -e ts -- vite-node src/index.ts",
     "build": "vite build",
