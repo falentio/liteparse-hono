@@ -1,12 +1,17 @@
 {
   "name": "liteparse-hono",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "API server for parsing documents with @llamaindex/liteparse, built on Hono for Node.js",
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "devEngines": {
-    "packageManager": { "name": "pnpm", "version": "11.5.0" }
+    "packageManager": {
+      "name": "pnpm",
+      "version": "11.5.0"
+    }
   },
   "scripts": {
     "dev": "watchexec -e ts -- vite-node src/index.ts",
